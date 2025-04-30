@@ -11,3 +11,12 @@ sudo apt remove --purge shell
 npm start
 
 npm run make
+
+
+
+# Zoom
+ ctrl+= ---> zoom in 
+ ctrl+- ----> zoom out 
+ ctrl+0 ---> full zoom out
+ ctrl+r ---->reloaded 
+ ctrl+shift+i ----> developer tool
