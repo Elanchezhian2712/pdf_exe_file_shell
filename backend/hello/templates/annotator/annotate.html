@@ -1,0 +1,249 @@
+{% extends 'annotator/base.html' %}
+{% load static %}
+
+{% block title %}Annotate PDF{% endblock %}
+
+{% block content %}
+<!-- ... (rest of the controls HTML) ... -->
+{% csrf_token %}
+
+<div class="annotation-controls sticky-top bg-light p-3 border rounded mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        
+        <!-- Tool buttons -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button id="tool-tick" class="btn btn-light annotation-button" data-type="tick">
+                <img src="/static/annotator/img/tick.png" alt="tick" class="img-fluid" style="width: 20px; height: 20px;">
+            </button>
+            <button id="tool-blue_mark" class="btn btn-light annotation-button" data-type="blue_mark">
+                <img src="/static/annotator/img/blue_mark.png" alt="blue mark" class="img-fluid" style="width: 20px; height: 20px;">
+            </button>
+            <button id="tool-cross" class="btn btn-light annotation-button" data-type="cross">
+                <img src="/static/annotator/img/cross.png" alt="cross" class="img-fluid" style="width: 20px; height: 20px;">
+            </button>
+        </div>
+
+        <!-- Count section -->
+        <div class="d-flex flex-wrap align-items-center gap-3 annotation-counts text-nowrap">
+            <span>
+                <img src="/static/annotator/img/tick.png" alt="tick" class="img-fluid" style="width: 20px; height: 20px;">
+                Ticks: <span id="count-tick">{{ counts.tick|default:0 }}</span>
+            </span>
+            <span>
+                <img src="/static/annotator/img/blue_mark.png" alt="blue mark" class="img-fluid" style="width: 20px; height: 20px;">
+                Blue Marks: <span id="count-blue_mark">{{ counts.blue_mark|default:0 }}</span>
+            </span>
+            <span>
+                <img src="/static/annotator/img/cross.png" alt="cross" class="img-fluid" style="width: 20px; height: 20px;">
+                Crosses: <span id="count-cross">{{ counts.cross|default:0 }}</span>
+            </span>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'download_pdf' %}" class="btn text-white" style="background-color: #444ea8; border-radius: 10px;" id="download-btn">Download Annotated PDF</a>
+            <a href="{% url 'upload_pdf' %}" class="btn btn-secondary" style="border-radius: 10px;">Upload New PDF</a>
+            <a href="{% url 'clear_pdf' %}" class="btn btn-danger" style="border-radius: 10px;">Clear</a>
+        </div>
+
+    </div>
+</div>
+
+<div id="pdf-viewer-container" class="text-center" style="overflow: hidden; cursor: pointer;">
+    <div id="pdf-viewer" class="pdf-pages" style="transition: transform 0.2s ease;">
+        {% for image_url in page_image_urls %}
+        <div class="pdf-page-container" data-page-num="{{ forloop.counter0 }}">
+            <img src="{{ image_url }}" class="pdf-page-image shadow-sm" alt="PDF Page {{ forloop.counter }}"
+                id="page-{{ forloop.counter0 }}">
+        </div>
+        {% empty %}
+        <p class="text-danger">Could not load PDF pages. Please try uploading again.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let currentTool = null;
+        const toolButtons = document.querySelectorAll('.annotation-button');
+        {% comment %} const toolInfo = document.getElementById('current-tool-info'); {% endcomment %}
+        const pageContainers = document.querySelectorAll('.pdf-page-container');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+     
+
+        // Keyboard shortcut support
+        document.addEventListener('keydown', function (event) {
+            const key = event.key.toLowerCase(); // Normalize to lowercase
+            if (key === 'g') {
+                document.getElementById('tool-tick').click();
+            } else if (key === 'b') {
+                document.getElementById('tool-blue_mark').click();
+            } else if (key === 'c') {
+                document.getElementById('tool-cross').click();
+            }
+        });
+
+        toolButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                toolButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                currentTool = this.getAttribute('data-type');
+                {% comment %} toolInfo.textContent = `Selected: ${this.textContent}`; {% endcomment %}
+            });
+        });
+
+        pageContainers.forEach(container => {
+            const pageNum = container.getAttribute('data-page-num');
+            const pageImage = container.querySelector('.pdf-page-image');
+
+            // Render existing annotations
+            const renderAnnotations = () => {
+                const annotations = {{ annotations|safe }};
+                annotations.forEach(annotation => {
+                    if (annotation.page_num == pageNum) {
+                        const pageInfoList = {{ page_info|safe }};
+                        const pageInfo = pageInfoList[pageNum];
+                        const scale = pageInfo.render_scale;
+
+                        const pdfX = annotation.pdf_x;
+                        const pdfY = annotation.pdf_y;
+
+                        const imgX = pdfX * scale;
+                        const imgY = pdfY * scale;
+
+                        const imgWidth = pageImage.naturalWidth;
+                        const imgHeight = pageImage.naturalHeight;
+
+                        const percentX = (imgX / imgWidth) * 100;
+                        const percentY = (imgY / imgHeight) * 100;
+
+                        const feedbackMark = document.createElement('div');
+                        feedbackMark.classList.add('feedback-annotation-mark');
+                        feedbackMark.style.left = `${percentX}%`;
+                        feedbackMark.style.top = `${percentY}%`;
+
+                        if (annotation.type === 'tick') {
+                            feedbackMark.innerHTML = '<img src="/static/annotator/img/tick.png" alt="tick" style="width: 20px; height: 20px;">';
+                        } else if (annotation.type === 'cross') {
+                            feedbackMark.innerHTML = '<img src="/static/annotator/img/cross.png" alt="cross" style="width: 20px; height: 20px;">';
+                        } else if (annotation.type === 'blue_mark') {
+                            feedbackMark.innerHTML = '<img src="/static/annotator/img/blue_mark.png" alt="blue_mark" style="width: 20px; height: 20px;">';
+                        }
+
+                        container.appendChild(feedbackMark);
+                    }
+                });
+            };
+
+            if (pageImage.complete) {
+                renderAnnotations();
+            } else {
+                pageImage.addEventListener('load', renderAnnotations);
+            }
+
+            const setupClickListener = () => {
+                pageImage.addEventListener('click', function (event) {
+                    if (!currentTool) {
+                        alert('Please select an annotation tool first!');
+                        return;
+                    }
+
+                    const rect = pageImage.getBoundingClientRect();
+                    const clickXRelElement = event.offsetX ?? (event.clientX - rect.left);
+                    const clickYRelElement = event.offsetY ?? (event.clientY - rect.top);
+
+                    const naturalWidth = pageImage.naturalWidth;
+                    const naturalHeight = pageImage.naturalHeight;
+                    const elementWidth = rect.width;
+                    const elementHeight = rect.height;
+
+                    if (naturalWidth === 0 || naturalHeight === 0 || elementWidth === 0 || elementHeight === 0) {
+                        console.error("Cannot annotate: Image dimensions invalid.");
+                        alert("Cannot place annotation, image size invalid.");
+                        return;
+                    }
+
+                    const imgX_natural = (clickXRelElement / elementWidth) * naturalWidth;
+                    const imgY_natural = (clickYRelElement / elementHeight) * naturalHeight;
+
+                    const clickXPct = (clickXRelElement / elementWidth) * 100;
+                    const clickYPct = (clickYRelElement / elementHeight) * 100;
+
+                    fetch("{% url 'add_annotation' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({
+                            page_num: parseInt(pageNum),
+                            x: imgX_natural,
+                            y: imgY_natural,
+                            type: currentTool
+                        })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw new Error(err.message || `HTTP ${response.status}`); });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Annotation response:', data);
+                            if (data.status === 'ok') {
+                                document.getElementById('count-tick').textContent = data.counts.tick;
+                                document.getElementById('count-blue_mark').textContent = data.counts.blue_mark;
+                                document.getElementById('count-cross').textContent = data.counts.cross;
+
+                                const feedbackMarks = container.querySelectorAll('.feedback-annotation-mark');
+                                if (data.action === 'removed') {
+                                    feedbackMarks.forEach(mark => {
+                                        const styleLeft = parseFloat(mark.style.left);
+                                        const styleTop = parseFloat(mark.style.top);
+                                        if (
+                                            Math.abs(styleLeft - clickXPct) < 1 &&
+                                            Math.abs(styleTop - clickYPct) < 1
+                                        ) {
+                                            mark.remove();
+                                        }
+                                    });
+                                } else {
+                                    const feedbackMark = document.createElement('div');
+                                    feedbackMark.classList.add('feedback-annotation-mark');
+                                    feedbackMark.style.left = `${clickXPct}%`;
+                                    feedbackMark.style.top = `${clickYPct}%`;
+
+                                    if (currentTool === 'tick') {
+                                        feedbackMark.innerHTML = '<img src="/static/annotator/img/tick.png" alt="tick" style="width: 20px; height: 20px;">';
+                                    } else if (currentTool === 'cross') {
+                                        feedbackMark.innerHTML = '<img src="/static/annotator/img/cross.png" alt="cross" style="width: 20px; height: 20px;">';
+                                    } else if (currentTool === 'blue_mark') {
+                                        feedbackMark.innerHTML = '<img src="/static/annotator/img/blue_mark.png" alt="blue_mark" style="width: 20px; height: 20px;">';
+                                    }
+
+                                    container.appendChild(feedbackMark);
+                                }
+                            } else {
+                                alert('Error adding annotation: ' + (data.message || 'Unknown error'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error adding annotation:', error);
+                            alert('Failed to add annotation.');
+                        });
+                });
+            };
+
+            if (pageImage.complete) {
+                setupClickListener();
+            } else {
+                pageImage.addEventListener('load', setupClickListener);
+            }
+            
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Shell</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Shell</h1>
+  <button id="startBtn">Start</button>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const { ipcRenderer } = require('electron');
+      document.getElementById('startBtn').addEventListener('click', () => {
+        ipcRenderer.send('open-django');
+      });
+    });
+  </script>
+</body>
+</html>

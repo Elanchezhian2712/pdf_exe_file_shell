@@ -1,0 +1,70 @@
+
+body { padding-top: 60px; }
+.annotation-controls { margin-bottom: 1rem; }
+.annotation-button { margin-right: 5px; font-size: 1.5rem; }
+.annotation-button.active { border: 2px solid blue; border-radius: 5px;}
+.annotation-counts span { margin-right: 15px; font-weight: bold; }
+
+.pdf-page-container {
+    position: relative;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    display: inline-block;
+    background-color: #f8f9fa; 
+    overflow: hidden; 
+    cursor: grab; 
+    line-height: 0; 
+    vertical-align: top; 
+}
+
+.pdf-page-image {
+    display: block;
+    width: 100%; 
+    height: auto;
+    transform-origin: 0 0;
+    transition: transform 0.1s ease-out; 
+    cursor: crosshair; 
+}
+
+.pdf-page-container.panning .pdf-page-image,
+.pdf-page-container.panning {
+    cursor: grabbing; 
+}
+.feedback-annotation-mark {
+    position: absolute;
+    width: 20px;  
+    height: 20px;
+    pointer-events: none; 
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+}
+.feedback-annotation-mark img {
+    display: block;
+    max-width: 100%; 
+    max-height: 100%;
+}
+
+
+.annotation-controls {
+    margin-bottom: 1rem;
+    overflow-x: auto;
+}
+
+.annotation-counts span {
+    margin-right: 15px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.annotation-button {
+    margin-right: 5px;
+    font-size: 1.5rem;
+}
+
+.annotation-button.active {
+    border: 2px solid blue;
+    border-radius: 5px;
+}

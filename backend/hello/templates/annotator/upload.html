@@ -1,0 +1,82 @@
+{% extends 'annotator/base.html' %}
+
+{% block title %}Upload PDF{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm" style="border-radius: 25px;">
+            <div class="card-header text-white" style="background-color: #444ea8; border-top-left-radius: 25px; border-top-right-radius: 25px;">
+                <h2 class="card-title h5 mb-0">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Upload PDF for Annotation
+                </h2>
+            </div>
+            <div class="card-body" style="border-bottom-left-radius: 25px; border-bottom-right-radius: 25px;">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+        
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}<br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+        
+                    {% with field=form.pdf_file %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+        
+                            {{ field }}
+        
+                            {% if field.help_text %}
+                                <div class="form-text text-muted">{{ field.help_text }}</div>
+                            {% endif %}
+        
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in field.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+        
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="submit" class="btn text-white" style="background-color: #444ea8; border-radius: 10px;">
+                            <i class="bi bi-cloud-upload me-1"></i> Upload
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add Bootstrap's 'form-control' class to file input if not done in forms.py
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.querySelector('input[type="file"]'); // Adjust selector if needed
+    if (fileInput && !fileInput.classList.contains('form-control')) {
+        fileInput.classList.add('form-control');
+    }
+    // Add is-invalid class if Django rendered errors for the field
+    const errorDivs = document.querySelectorAll('.invalid-feedback');
+    errorDivs.forEach(div => {
+        const input = div.previousElementSibling; // Find the input associated with the error
+        if (input && (input.tagName === 'INPUT' || input.tagName === 'SELECT' || input.tagName === 'TEXTAREA')) {
+             if(!input.classList.contains('is-invalid')) {
+                input.classList.add('is-invalid');
+             }
+        }
+    });
+});
+</script>
+{% endblock %}
