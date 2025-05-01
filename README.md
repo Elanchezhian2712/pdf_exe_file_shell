@@ -1,17 +1,18 @@
 # pdf_exe_file_shell
           
+          remove:           
+                    sudo apt remove --purge shell
 
-            
-          sudo apt remove --purge shell
-
-
-          pyinstaller --name backend_server --onedir --clean --add-data="./hello/templates:templates" --add-data="./hello/static:static" run_backend.py
-
+          ubunut:
+                    pyinstaller --name backend_server --onedir --clean --add-data="./hello/templates:templates" --add-data="./hello/static:static" run_backend.py
+          windows:
+                    pyinstaller --name backend_server --onedir --clean --noconsole --add-data="./hello/templates;templates" --add-data="./hello/static;static" run_backend.py
           
-          npm start
+          Start electronjs:
+                     npm start
           
-          npm run make
-
+          Executable file cmd for both os:
+                    npm run make
 
 
 # Zoom
@@ -24,3 +25,12 @@
            ctrl+r ---->reloaded 
            
            ctrl+shift+i ----> developer tool
+
+
+ # Windows Location path
+
+          C:\Users\Elanchezhian M\AppData\Local\Shell
+
+
+# exe file 
+          https://drive.google.com/drive/folders/1_7fj8Z0zu0_h7oQ1A9XTPjD_HD56c--I?usp=sharing
