@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Zoom Beyond 500%</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: auto;
+    }
+
+    #zoom-container {
+      transform-origin: top left;
+      transition: transform 0.2s ease;
+    }
+
+    .controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: #000;
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 9999;
+    }
+
+    .controls button {
+      margin: 0 5px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="controls">
+  <button onclick="zoomIn()">Zoom In</button>
+  <button onclick="zoomOut()">Zoom Out</button>
+  <button onclick="resetZoom()">Reset</button>
+  <span id="zoom-level">Zoom: 100%</span>
+</div>
+
+<div id="zoom-container">
+  <h1 style="font-size: 50px;">Zoomable Content</h1>
+  <p style="font-size: 30px;">This content can be zoomed beyond 500% using CSS transform.</p>
+</div>
+
+<script>
+  let zoomLevel = 1;
+  const container = document.getElementById('zoom-container');
+  const zoomText = document.getElementById('zoom-level');
+
+  function updateZoom() {
+    container.style.transform = `scale(${zoomLevel})`;
+    zoomText.innerText = `Zoom: ${Math.round(zoomLevel * 100)}%`;
+  }
+
+  function zoomIn() {
+    zoomLevel += 0.1;
+    updateZoom();
+  }
+
+  function zoomOut() {
+    if (zoomLevel > 0.2) {
+      zoomLevel -= 0.1;
+      updateZoom();
+    }
+  }
+
+  function resetZoom() {
+    zoomLevel = 1;
+    updateZoom();
+  }
+
+  updateZoom();
+</script>
+
+</body>
+</html>
