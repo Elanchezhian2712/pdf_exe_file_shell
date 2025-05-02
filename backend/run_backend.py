@@ -1,5 +1,3 @@
-# ~/Desktop/demo_work/backend/run_backend.py
-
 import os
 import sys
 import django
@@ -8,7 +6,6 @@ import time
 import importlib
 import traceback
 
-# --- Function to determine the application root directory ---
 def get_app_root():
     if getattr(sys, 'frozen', False):
         executable_path = sys.executable
@@ -24,12 +21,10 @@ def get_app_root():
         return app_root
 
 APP_ROOT = get_app_root()
-IS_FROZEN = getattr(sys, 'frozen', False) # Determine if frozen early
+IS_FROZEN = getattr(sys, 'frozen', False) 
 
-# --- Get User Data Path from Environment Variable ---
 APP_DATA_PATH = os.environ.get('APP_DATA_PATH')
 
-# --- Construct Database Path ---
 if APP_DATA_PATH:
     try:
         os.makedirs(APP_DATA_PATH, exist_ok=True)
@@ -44,30 +39,25 @@ else:
     DATABASE_PATH = os.path.join(APP_ROOT, 'db.sqlite3')
 
 
-# --- Configure Django Settings ---
-DJANGO_SETTINGS_MODULE = 'backend.settings' # Ensure this is correct!
+DJANGO_SETTINGS_MODULE = 'backend.settings' 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', DJANGO_SETTINGS_MODULE)
 
 try:
     settings_module = importlib.import_module(DJANGO_SETTINGS_MODULE)
     print(f"[run_backend.py] Imported settings module: {DJANGO_SETTINGS_MODULE}")
 
-    # --- Modify Database Path ---
     settings_module.DATABASES['default']['NAME'] = DATABASE_PATH
     print(f"[run_backend.py] Overrode DATABASES['default']['NAME'] to: {DATABASE_PATH}")
 
-    # --- Modify Template/Static Paths ONLY if Frozen ---
     if IS_FROZEN:
         print("[run_backend.py] Application is frozen. Modifying Template/Static paths.")
 
-        # --- Modify Template Path (Look inside _internal when frozen) ---
         bundled_templates_dir = os.path.join(APP_ROOT, '_internal', 'templates')
         print(f"[run_backend.py] (Frozen) Calculated target bundled templates path: {bundled_templates_dir}")
 
         if os.path.exists(bundled_templates_dir):
             print(f"[run_backend.py] Bundled templates directory target EXISTS: {bundled_templates_dir}")
             if hasattr(settings_module, 'TEMPLATES') and isinstance(settings_module.TEMPLATES, list) and len(settings_module.TEMPLATES) > 0:
-                # Replace DIRS completely and set APP_DIRS to False
                 settings_module.TEMPLATES[0]['DIRS'] = [bundled_templates_dir]
                 settings_module.TEMPLATES[0]['APP_DIRS'] = False
                 print(f"[run_backend.py] REPLACED TEMPLATES[0]['DIRS'] = [{bundled_templates_dir}]")
@@ -77,22 +67,19 @@ try:
             print(f"[run_backend.py] Bundled templates directory target DOES NOT EXIST: {bundled_templates_dir}")
 
 
-        # --- Modify Static Files Path (Look inside _internal when frozen) ---
         bundled_static_dir = os.path.join(APP_ROOT, '_internal', 'static')
         print(f"[run_backend.py] (Frozen) Calculated target bundled static path: {bundled_static_dir}")
 
         if os.path.exists(bundled_static_dir):
              print(f"[run_backend.py] Bundled static directory target EXISTS: {bundled_static_dir}")
-             # Replace STATICFILES_DIRS completely
              settings_module.STATICFILES_DIRS = [bundled_static_dir]
              print(f"[run_backend.py] REPLACED STATICFILES_DIRS = [{bundled_static_dir}]")
         else:
              print(f"[run_backend.py] Bundled static directory target DOES NOT EXIST: {bundled_static_dir}")
-             # Define STATICFILES_DIRS as empty list if bundled dir doesn't exist
              settings_module.STATICFILES_DIRS = []
              print(f"[run_backend.py] Set STATICFILES_DIRS = []")
 
-    else: # Not frozen - use default settings
+    else: 
         print("[run_backend.py] Application not frozen. Using default settings for Templates/Static.")
 
 
@@ -106,8 +93,6 @@ except Exception as e:
      sys.exit(1)
 
 
-# --- Django Command Runner ---
-# ... (Keep run_command function as is) ...
 def run_command(args):
     try:
         print(f"[run_backend.py] Executing command: {' '.join(args)}")
@@ -119,8 +104,7 @@ def run_command(args):
         traceback.print_exc(file=sys.stderr)
         return 1
 
-# --- Main Execution Logic ---
-# ... (Keep __main__ block as is) ...
+
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else "runserver"
     print(f"[run_backend.py] Received command: {command}")

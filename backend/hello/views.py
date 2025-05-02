@@ -21,21 +21,15 @@ RENDER_SCALE_FACTOR = 2.0
 def get_app_root():
     """Determines the app root directory, handling frozen state."""
     if getattr(sys, 'frozen', False):
-        # Running as bundled executable (PyInstaller)
         executable_path = sys.executable
         app_root = os.path.dirname(executable_path)
-        # print(f"[get_app_root] Frozen mode. App root: {app_root}") # Optional debug
         return app_root
     else:
-        # Running as script. Use __file__'s directory's parent (assuming views.py is in an 'annotator' subdir)
-        # Or adjust based on your exact structure if running directly
         script_path = os.path.abspath(__file__)
-        app_root = os.path.dirname(os.path.dirname(script_path)) # Go up one level from views.py dir
-        # print(f"[get_app_root] Script mode. App root: {app_root}") # Optional debug
+        app_root = os.path.dirname(os.path.dirname(script_path)) 
         return app_root
 
-# --- Other Helper Functions ---
-# ... (get_session_data, get_pdf_document remain the same) ...
+
 def get_session_data(request):
     """Safely get annotation data and counts from session."""
     annotations = request.session.get(SESSION_KEY_ANNOTATIONS, [])
@@ -54,8 +48,7 @@ def get_pdf_document(request):
         print(f"Error opening PDF: {e}")
         return None
 
-# --- Views ---
-# ... (upload_pdf, annotate_pdf, get_page_image, add_annotation remain the same) ...
+
 def upload_pdf(request):
     if request.method == 'POST':
         form = PDFUploadForm(request.POST, request.FILES)
@@ -158,28 +151,22 @@ def download_pdf(request):
     if not doc:
         return HttpResponse("Error: PDF not found or could not be opened.", status=404)
 
-    # --- CORRECTED ICON PATH LOGIC ---
     APP_ROOT = get_app_root() # Get the correct root path
     is_frozen = getattr(sys, 'frozen', False)
 
-    # Define relative path within static dir
     relative_img_dir = os.path.join('static', 'annotator', 'img')
 
-    # Determine base static dir based on frozen status
     if is_frozen:
-         # When frozen, static files are inside _internal relative to APP_ROOT
         base_static_dir = os.path.join(APP_ROOT, '_internal', relative_img_dir)
     else:
-         # In development, assume static is relative to APP_ROOT (project base)
-         # This might need adjustment based on your STATICFILES_DIRS in settings.py if defined
-        base_static_dir = os.path.join(APP_ROOT, 'hello', relative_img_dir) # Adjust if structure differs
+        base_static_dir = os.path.join(APP_ROOT, 'hello', relative_img_dir) 
 
-    print(f"[download_pdf] Using base static dir for icons: {base_static_dir}")
+    # print(f"[download_pdf] Using base static dir for icons: {base_static_dir}")
 
     icon_paths = {
         atype: os.path.join(base_static_dir, f"{atype}.png") for atype in ANNOTATION_TYPES
     }
-    icon_size = 12 # Adjust as needed
+    icon_size = 11
 
     try:
         for ann in annotations:
@@ -208,7 +195,6 @@ def download_pdf(request):
                     except Exception as insert_err:
                         print(f"Error inserting image {icon_path} on page {page_num}: {insert_err}")
                 else:
-                    # Make warning more prominent
                     print(f"!!!!!!!! WARNING: Icon image NOT FOUND or path is None for type '{ann_type}' at {icon_path}")
         # --- Optional: Add counts text (Keep commented out unless needed) ---
         # if len(doc) > 0: ...
@@ -235,7 +221,6 @@ def download_pdf(request):
     except Exception as e:
         if doc: doc.close()
         print(f"Error processing PDF for download: {e}")
-        # --- Cleanup on error ---
         original_temp_path = request.session.get(SESSION_KEY_PDF_PATH)
         if original_temp_path and os.path.exists(original_temp_path):
              try: os.unlink(original_temp_path)
@@ -246,15 +231,13 @@ def download_pdf(request):
 
         return HttpResponse("Error processing PDF for download.", status=500)
 
-# ... (clear_pdf remains the same) ...
+
 @require_GET
 def clear_pdf(request):
-    # ... (clear_pdf logic) ...
     annotations_key = SESSION_KEY_ANNOTATIONS
     if annotations_key in request.session:
         del request.session[annotations_key]
         print(f"Cleared session key: {annotations_key}")
     else:
         print(f"Session key '{annotations_key}' not found, nothing to clear.")
-    # Redirect back to the annotation page after clearing
     return redirect(reverse('annotate_pdf'))

@@ -1,6 +1,13 @@
 {% extends 'annotator/base.html' %}
 
 {% block title %}Upload PDF{% endblock %}
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f5f5f9; 
+    }
+</style>
+{% endblock %} 
 
 {% block content %}
 <div class="row justify-content-center">
@@ -61,16 +68,14 @@
 
 {% block extra_js %}
 <script>
-// Add Bootstrap's 'form-control' class to file input if not done in forms.py
 document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.querySelector('input[type="file"]'); // Adjust selector if needed
+    const fileInput = document.querySelector('input[type="file"]');
     if (fileInput && !fileInput.classList.contains('form-control')) {
         fileInput.classList.add('form-control');
     }
-    // Add is-invalid class if Django rendered errors for the field
     const errorDivs = document.querySelectorAll('.invalid-feedback');
     errorDivs.forEach(div => {
-        const input = div.previousElementSibling; // Find the input associated with the error
+        const input = div.previousElementSibling;
         if (input && (input.tagName === 'INPUT' || input.tagName === 'SELECT' || input.tagName === 'TEXTAREA')) {
              if(!input.classList.contains('is-invalid')) {
                 input.classList.add('is-invalid');

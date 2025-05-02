@@ -4,55 +4,52 @@
 {% block title %}Annotate PDF{% endblock %}
 
 {% block content %}
-<!-- ... (rest of the controls HTML) ... -->
 {% csrf_token %}
 
-<div class="annotation-controls sticky-top bg-light p-3 border rounded mb-3">
+<div class="annotation-controls bg-light p-3 shadow-sm rounded-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        
-        <!-- Tool buttons -->
-        <div class="d-flex flex-wrap align-items-center gap-2">
-            <button id="tool-tick" class="btn btn-light annotation-button" data-type="tick">
-                <img src="/static/annotator/img/tick.png" alt="tick" class="img-fluid" style="width: 20px; height: 20px;">
-            </button>
-            <button id="tool-blue_mark" class="btn btn-light annotation-button" data-type="blue_mark">
-                <img src="/static/annotator/img/blue_mark.png" alt="blue mark" class="img-fluid" style="width: 20px; height: 20px;">
-            </button>
-            <button id="tool-cross" class="btn btn-light annotation-button" data-type="cross">
-                <img src="/static/annotator/img/cross.png" alt="cross" class="img-fluid" style="width: 20px; height: 20px;">
-            </button>
-        </div>
+        <!-- Combined Tool buttons with Count display -->
+        <div class="d-flex flex-wrap align-items-center gap-4 ms-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <button id="tool-tick" class="btn tool-button annotation-button" data-type="tick">
+                    <span style="font-size: 30px; color: rgb(2, 179, 2);">&#10003;</span>
+                </button>
+                <span>
+                   
+                   Green Ticks: <span id="count-tick">{{ counts.tick|default:0 }}</span>
+                </span>
 
-        <!-- Count section -->
-        <div class="d-flex flex-wrap align-items-center gap-3 annotation-counts text-nowrap">
-            <span>
-                <img src="/static/annotator/img/tick.png" alt="tick" class="img-fluid" style="width: 20px; height: 20px;">
-                Ticks: <span id="count-tick">{{ counts.tick|default:0 }}</span>
-            </span>
-            <span>
-                <img src="/static/annotator/img/blue_mark.png" alt="blue mark" class="img-fluid" style="width: 20px; height: 20px;">
-                Blue Marks: <span id="count-blue_mark">{{ counts.blue_mark|default:0 }}</span>
-            </span>
-            <span>
-                <img src="/static/annotator/img/cross.png" alt="cross" class="img-fluid" style="width: 20px; height: 20px;">
-                Crosses: <span id="count-cross">{{ counts.cross|default:0 }}</span>
-            </span>
+                <button id="tool-blue_mark" class="btn tool-button annotation-button" data-type="blue_mark">
+                    <span style="font-size: 30px; color: rgb(12, 48, 209);">&#10003;</span>
+                </button>
+                <span>
+                    Blue Ticks: <span id="count-blue_mark">{{ counts.blue_mark|default:0 }}</span>
+                </span>
+
+                <button id="tool-cross" class="btn tool-button annotation-button" data-type="cross">
+                    <span style="font-size: 30px; color:rgb(250, 0, 0);">&#10060;</span>
+                </button>
+                <span>
+                    Crosses: <span id="count-cross">{{ counts.cross|default:0 }}</span>
+                </span>
+            </div>
         </div>
 
         <!-- Action buttons -->
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <a href="{% url 'download_pdf' %}" class="btn text-white" style="background-color: #444ea8; border-radius: 10px;" id="download-btn">Download Annotated PDF</a>
-            <a href="{% url 'upload_pdf' %}" class="btn btn-secondary" style="border-radius: 10px;">Upload New PDF</a>
-            <a href="{% url 'clear_pdf' %}" class="btn btn-danger" style="border-radius: 10px;">Clear</a>
+            <a href="{% url 'download_pdf' %}"class="btn text-white rounded-pill px-3" style="background-color: #444ea8;">Download</a>
+            <a href="{% url 'upload_pdf' %}" class="btn btn-outline-secondary rounded-pill px-3">Upload</a>
+            <a href="{% url 'clear_pdf' %}" class="btn btn-outline-danger rounded-pill px-3">Clear</a>
         </div>
 
     </div>
 </div>
 
-<div id="pdf-viewer-container" class="text-center" style="overflow: hidden; cursor: pointer;">
-    <div id="pdf-viewer" class="pdf-pages" style="transition: transform 0.2s ease;">
+
+<div id="pdf-viewer-container" class="text-center " style="overflow: hidden; cursor: pointer;">
+    <div id="pdf-viewer" class="pdf-pages " style="transition: transform 0.2s ease;">
         {% for image_url in page_image_urls %}
-        <div class="pdf-page-container" data-page-num="{{ forloop.counter0 }}">
+        <div class="pdf-page-container mt-5" data-page-num="{{ forloop.counter0 }}">
             <img src="{{ image_url }}" class="pdf-page-image shadow-sm" alt="PDF Page {{ forloop.counter }}"
                 id="page-{{ forloop.counter0 }}">
         </div>
@@ -64,6 +61,15 @@
 
 {% endblock %}
 {% block extra_js %}
+<script>
+    function detectZoom() {
+        const zoom = window.devicePixelRatio || 1;
+        document.documentElement.style.setProperty('--zoom-scale', zoom);
+    }
+    window.addEventListener('resize', detectZoom);
+    detectZoom();  
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let currentTool = null;
@@ -81,7 +87,7 @@
                 document.getElementById('tool-tick').click();
             } else if (key === 'b') {
                 document.getElementById('tool-blue_mark').click();
-            } else if (key === 'c') {
+            } else if (key === 'r') {
                 document.getElementById('tool-cross').click();
             }
         });
@@ -126,11 +132,11 @@
                         feedbackMark.style.top = `${percentY}%`;
 
                         if (annotation.type === 'tick') {
-                            feedbackMark.innerHTML = '<img src="/static/annotator/img/tick.png" alt="tick" style="width: 20px; height: 20px;">';
+                            feedbackMark.innerHTML = '<span style="color:rgb(2, 179, 2);">&#10003;</span>';
                         } else if (annotation.type === 'cross') {
-                            feedbackMark.innerHTML = '<img src="/static/annotator/img/cross.png" alt="cross" style="width: 20px; height: 20px;">';
+                            feedbackMark.innerHTML = '<span style="color:rgb(250, 0, 0);">&#10060;</span>';
                         } else if (annotation.type === 'blue_mark') {
-                            feedbackMark.innerHTML = '<img src="/static/annotator/img/blue_mark.png" alt="blue_mark" style="width: 20px; height: 20px;">';
+                            feedbackMark.innerHTML = '<span style="color: rgb(12, 48, 209);">&#10003;</span>';
                         }
 
                         container.appendChild(feedbackMark);
@@ -217,11 +223,11 @@
                                     feedbackMark.style.top = `${clickYPct}%`;
 
                                     if (currentTool === 'tick') {
-                                        feedbackMark.innerHTML = '<img src="/static/annotator/img/tick.png" alt="tick" style="width: 20px; height: 20px;">';
+                                        feedbackMark.innerHTML = '<span style="color:rgb(2, 179, 2);">&#10003;</span>';
                                     } else if (currentTool === 'cross') {
-                                        feedbackMark.innerHTML = '<img src="/static/annotator/img/cross.png" alt="cross" style="width: 20px; height: 20px;">';
+                                        feedbackMark.innerHTML = '<span style="color:rgb(250, 0, 0);">&#10060;</span>';
                                     } else if (currentTool === 'blue_mark') {
-                                        feedbackMark.innerHTML = '<img src="/static/annotator/img/blue_mark.png" alt="blue_mark" style="width: 20px; height: 20px;">';
+                                        feedbackMark.innerHTML = '<span style="color: rgb(12, 48, 209);">&#10003;</span>';
                                     }
 
                                     container.appendChild(feedbackMark);
