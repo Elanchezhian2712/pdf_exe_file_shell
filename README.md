@@ -1,18 +1,28 @@
-# pdf_exe_file_shell
+- pdf_exe_file_shell
           
-          remove:           
-                    sudo apt remove --purge shell
+  - remove:
+    
+        sudo apt remove --purge shell
 
-          ubunut:
-                    pyinstaller --name backend_server --onedir --clean --add-data="./hello/templates:templates" --add-data="./hello/static:static" run_backend.py
-          windows:
-                    pyinstaller --name backend_server --onedir --clean --noconsole --add-data="./hello/templates;templates" --add-data="./hello/static;static" run_backend.py
+  - ubunut:
+  
+        pyinstaller --name backend_server --onedir --clean --add-data="./hello/templates:templates" --add-data="./hello/static:static" run_backend.py
+
+  - ubunut exe install :
           
-          Start electronjs:
-                     npm start
+        sudo apt install ./shell_1.0.0_amd64.deb
+
+  - windows:
+    
+        pyinstaller --name backend_server --onedir --clean --noconsole --add-data="./hello/templates;templates" --add-data="./hello/static;static" run_backend.py
           
-          Executable file cmd for both os:
-                    npm run make
+  - Start electronjs:
+    
+        npm start
+          
+  - Executable file cmd for both os:
+    
+        npm run make
 
 
 # Zoom
